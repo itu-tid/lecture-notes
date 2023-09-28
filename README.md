@@ -4,15 +4,18 @@
 
 ## Week 2 - Understanding Users
 - Tech Top-Up: [2-DOM-Manipulation-with-Javascript](Tech-TopUps/2-DOM-Manipulation-with-Javascript.md)
+- Lecture: [on learnIt]
 
 ## Week 3 - Structure and Skeleton - Diagramming & Wireframing
 - Tech Top-Up: [3-Javascript-the-Language](Tech-TopUps/3-Javascript-the-Language.md)
+- Lecture: [on learnIt]
 
 ## Week 4 - Feedback on Wireframing
+Lecture: [on learnIt]
 
 
 ## Week 5 - Usability Its Evaluation
-- [5-Usability-and-Its-Evaluation](Lectures/5-Usability-and-Its-Evaluation.md)
+- Lecture: [5-Usability-and-Its-Evaluation](Lectures/5-Usability-and-Its-Evaluation.md)
 
 ## Week 6 - Visual Design & Design Systems
 
