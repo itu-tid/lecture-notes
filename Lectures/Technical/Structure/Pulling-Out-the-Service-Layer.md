@@ -1,6 +1,6 @@
 # Pulling Out the Service Layer
 
-It follows on from [Finding the Components](Finding-the-Components.md), and works on the `todo-26` app as it stands after [Routing in React](../Routing/Routing-in-React.md). You will not write a single new query in this note. Every query is already there; it only moves.
+It works on the `todo-26` app as it stands after [Routing in React](../Routing/Routing-in-React.md). You will not write a single new query in this note. Every query is already there; it only moves.
 
 > **In todo-26:** `git checkout week-06-routing` is where this note starts, and `git checkout week-08-service-layer` is where it ends. `git diff week-06-routing week-08-service-layer -- src` shows every line that moved.
 
@@ -251,6 +251,8 @@ It is not quite the whole story. `Home` never imports Parse and still calls `mem
 If Back4App doubles its prices and your group moves to another backend, which files change? Before: every component. After: the files in `services/`. The components ask for `loadTodos(list)` and get an array of plain objects; they do not care who answered.
 
 The more everyday payoff is in the team. One person reshapes the home page, another fixes a sharing bug, and their pull requests touch different files.
+
+With the queries gone, what is left in the components is only the screen, and the next question is whether the screen is cut into the right components: [Finding the Components](Finding-the-Components.md).
 
 ## Exam Questions
 
