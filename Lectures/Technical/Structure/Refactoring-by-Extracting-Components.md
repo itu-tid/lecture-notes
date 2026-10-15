@@ -3,26 +3,70 @@
 
 **Lesson:** refactoring is critical for having a codebase that is maintainable and pleasant to work with
 
-#### Challenge: Compare the following equivalent versions of code
+#### Challenge: Compare the following equivalent versions of `Home` in todo-26
 
-- They have **exactly the same behavior**: rendering items in the todo list
+- They have **exactly the same behavior**: the same page, the same links and buttons
 - Which of them is easier to read?
 
-##### Version 1
+##### Version 1 — `git checkout week-08-service-layer`
 
-![](../images/monster-component-part-1.png)
-![](../images/monster-component-part-2.png)
+```jsx
+<h2>My lists</h2>
+{lists.map((item) => (
+  <div key={item.id}>
+    <Link to={`/lists/${item.id}`}>{item.get("name")}</Link>
+    <AddForm
+      onAdd={(username) => onShare(item, username)}
+      buttonLabel="Share with (username)"
+    />
+  </div>
+))}
 
-##### Version 2 
-![](../images/component-with-same-abstraction-level-code.png)
+{memberships.length > 0 && <h2>Shared with me</h2>}
+{memberships.map((membership) => (
+  <p key={membership.id}>
+    <Link to={`/lists/${membership.get("list").id}`}>
+      {membership.get("list").get("name")}
+    </Link>{" "}
+    shared by{" "}
+    {membership.get("list").get("owner")?.get("username") ?? "someone"}{" "}
+    <button onClick={() => onLeave(membership)}>Leave</button>
+  </p>
+))}
 
+<h3>List Manager</h3>
+<AddForm onAdd={onAddList} buttonLabel="New list" />
+<h3>Account</h3>
+<button onClick={onLogout}>Logout</button>
+```
 
-- this version allows us to think in terms of the UI elements that are all at the same abstraction level - the play/stop button, the name of the todo list item, its duration, the remove button.
-- the previous version was at all possible abstraction levels
-	- play button
-	- maths computation
-	- css details
-	- etc.
+##### Version 2 — `git checkout week-08-components`
+
+```jsx
+<h2>My lists</h2>
+{lists.map((list) => (
+  <MyListRow key={list.id} list={list} onShare={onShare} />
+))}
+
+{memberships.length > 0 && <h2>Shared with me</h2>}
+{memberships.map((membership) => (
+  <SharedListRow key={membership.id} membership={membership} onLeave={onLeave} />
+))}
+
+<h3>List Manager</h3>
+<AddForm onAdd={onAddList} buttonLabel="New list" />
+<h3>Account</h3>
+<button onClick={onLogout}>Logout</button>
+```
+
+- Version 2 reads like the page: two headings, two kinds of row, a form, a button. Everything in it is at the same abstraction level, that of the page.
+- Version 1 is at every level at once
+	- the page: headings, sections
+	- one row: a link, a form, a button
+	- the data: `membership.get("list").get("owner")?.get("username")`, a pointer followed through a pointer
+	- the text between the elements: `{" "}`
+
+The details did not go away. They moved to [`SharedListRow`](Finding-the-Components.md#extracting-a-component-is-moving-jsx-out-and-naming-what-it-needs), where they are the whole point, and you read them only when the row is what you care about.
 
 #### Principle: Code in a component should be at the same abstraction level
 
