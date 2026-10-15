@@ -72,40 +72,38 @@ A name also has to fit every place the thing is used. The form began, in [Forms 
 - `SharedListRow` — draws one list somebody shared with me. One box.
 - `AddForm` — an input and a button, neither any use without the other. Still one box.
 
-### The common way to fail is welding a **domain** component to a **layout** one
+### The common way to fail is welding the page's heading into a component that does not need it
 
-Something that knows about to-dos, glued to something that would happily hold anything at all:
+`todo-26` still has one. `ToDoList` draws the to-dos and the form to add one, and, at the top, the page's title:
 
 ```jsx
-function ToDoPanel({ firstName, children }) { // two components
+export default function ToDoList({ list }) {
+  let h1Style = { color: "deeppink", backgroundColor: "white" };
+  // …
   return (
     <>
-      <h1>To Do List for {firstName}</h1>
-      <div className="panel">{children}</div>
+      <h1 style={h1Style}>{list.get("name")}</h1>
+      {/* … the to-dos, and the AddForm … */}
     </>
   );
 }
 ```
 
-Want the heading somewhere without a panel? Want a panel around something that is not a to-do list? You cannot have either, because they were glued together before anybody asked.
+Want the list without the big pink title, say as a preview of the first few to-dos on the home page? Want a share button next to the title, on the list's page? You cannot have either, because they were glued together before anybody asked.
 
-**Both halves would be useful alone, and that is the whole argument.** It is the exact opposite of `AddForm`, where neither half would be. Notice too that the name gave nothing away: `ToDoPanel` sounds like one thing.
+**Both halves would be useful alone, and that is the whole argument.** It is the exact opposite of `AddForm`, where neither half would be. Notice too that the name gave nothing away: `ToDoList` sounds like one thing, and it is one thing plus a heading.
 
-Split, each half is usable on its own, and the caller says what it wants:
+The heading belongs to the page. Split, `ListPage` says what goes on it, and `ToDoList` draws only the list:
 
 ```jsx
-function Panel({ children }) {
-  return <div className="panel">{children}</div>;
-}
-
-// and at the call site — whatever goes between the tags arrives as `children`
-<Panel>
-  <h1>To Do List for {firstName}</h1>
-  <TodoList todos={todos} />
-</Panel>
+// in ListPage
+<>
+  <h1>{list.get("name")}</h1>
+  <ToDoList key={list.id} list={list} />
+</>
 ```
 
-Two boxes on the drawing, two components in the file.
+Two boxes on the drawing, two components in the file. This one is left for you: in `todo-26` it is a two-line pull request.
 
 Two other signals, both visible on the drawing rather than in the code:
 
@@ -207,7 +205,7 @@ And look at the shape of it: `TextInput` takes the value it should show, and a w
 
 ## Exam Questions
 
-### 1. `AddForm` holds an input and a button and is one component. `ToDoPanel` holds a heading and a container and should be two. What is the difference?
+### 1. `AddForm` holds an input and a button and is one component. `ToDoList` holds the list's heading and its to-dos and should be two. What is the difference?
 
 ### 2. What is wrong with a component that renders a to-do heading *and* accepts arbitrary `children`?
 

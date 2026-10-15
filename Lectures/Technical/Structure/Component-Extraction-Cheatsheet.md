@@ -70,7 +70,7 @@ When unsure, leave it. Extracting later takes five minutes; a component nobody n
 | `onChange={onChange}` on a wrapped `<input>` | The parent gets an event where it expected text | `onChange={(event) => onChange(event.target.value)}` |
 | A query in a click handler | The component knows how the database works | A function in `services/`, named in the app's words |
 | `alert` in a service | The service decides how the UI reports errors | The service throws; the component catches and tells the user |
-| A heading welded to a container | Neither half can be used without the other | Two components, joined with `children` |
+| The page's heading inside `ToDoList` | The list cannot be drawn without the title, nor the title with anything else | The page draws the heading; `ToDoList` draws the list |
 | A component for every `<div>` | Clutter, for nothing | The [stopping rule](Finding-the-Components.md#start-by-drawing-boxes-on-the-app-you-can-already-see): extract when it repeats |
 
 ## For a deeper dive
