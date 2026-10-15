@@ -6,11 +6,11 @@ One page, for when you are reviewing a pull request, your own or a teammate's. T
 
 From this week on, this is the review checklist. Before you approve a pull request, you should be able to answer *yes* to all five:
 
-- [ ] **Small components.** Does each component do one job, with everything in it at the same level of abstraction?
-- [ ] **State where it belongs.** Is every piece of state in the lowest component that needs it, and no lower?
-- [ ] **Clear names.** Do components have nouns for names and handlers verbs, and does every name still fit every place it is used?
-- [ ] **Parse behind a service.** Does only `services/` import Parse?
-- [ ] **No needless dependencies.** Is every new package in `package.json` worth what it costs? (See [Libraries](../Tooling/Libraries.md).)
+1. **Small components.** Does each component do one job, with everything in it at the same level of abstraction?
+2. **State where it belongs.** Is every piece of state in the lowest component that needs it, and no lower?
+3. **Clear names.** Do components have nouns for names and handlers verbs, and does every name still fit every place it is used?
+4. **Parse behind a service.** Does only `services/` import Parse?
+5. **No needless dependencies.** Is every new package in `package.json` worth what it costs? (See [Libraries](../Tooling/Libraries.md).)
 
 *State where it belongs* gets its full answer in week 10, with [lifting state up](Refactoring-by-Extracting-Components.md#where-the-state-goes). Until then: if two components need the same state, it lives in their closest common parent.
 

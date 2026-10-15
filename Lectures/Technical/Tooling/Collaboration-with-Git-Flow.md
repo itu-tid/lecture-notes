@@ -25,7 +25,7 @@ Git Flow is a popular way of choreographing collaboration with Git, built around
 
 ![The Git Flow Model](../images/The%20Git%20Flow%20Model.png)
 
-In TID we use a simplified version, with three kinds of branch:
+The picture uses the original names, `develop` and `master`. In TID we use a simplified version, with today's names, and three kinds of branch:
 
 - **`main`**: releases, the versions you hand in
 - **`development`**: the group's latest work, integrated
