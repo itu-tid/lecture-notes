@@ -1,295 +1,80 @@
 # Component Extraction Cheat Sheet
 
-> **On the examples below.** They are written in TypeScript with Tailwind class names,
-> because they came from a different course. This course is JavaScript and MUI. Read them for the *decisions* — when a block deserves a name, when repetition earns a component — and ignore the syntax around them; nothing here depends on the stack.
+One page, for when you are reviewing a pull request, your own or a teammate's. The reasoning behind it is in [Finding the Components](Finding-the-Components.md), [Pulling Out the Service Layer](Pulling-Out-the-Service-Layer.md) and [Code Organization](Code-Organization.md); the examples are all from `todo-26`.
 
+## Every pull request is judged against the same five questions
 
-## Quick Decision Tree
+From this week on, this is the review checklist. Before you approve a pull request, you should be able to answer *yes* to all five:
+
+- [ ] **Small components.** Does each component do one job, with everything in it at the same level of abstraction?
+- [ ] **State where it belongs.** Is every piece of state in the lowest component that needs it, and no lower?
+- [ ] **Clear names.** Do components have nouns for names and handlers verbs, and does every name still fit every place it is used?
+- [ ] **Parse behind a service.** Does only `services/` import Parse?
+- [ ] **No needless dependencies.** Is every new package in `package.json` worth what it costs? (See [Libraries](../Tooling/Libraries.md).)
+
+*State where it belongs* gets its full answer in week 10, with [lifting state up](Refactoring-by-Extracting-Components.md#where-the-state-goes). Until then: if two components need the same state, it lives in their closest common parent.
+
+## Extract a block when it repeats, or when you can name it and the page reads better without it
 
 ```
-Is this JSX block hard to understand?
-├─ YES → Can you describe it in 1-2 words?
-│  ├─ YES → Extract component with that name
-│  └─ NO → Break it into smaller logical pieces
-│
-└─ NO → Is it repeated 3+ times?
-   ├─ YES → Extract reusable component
-   └─ NO → Keep as is (don't over-abstract)
+Is this JSX the same thing, drawn more than once?
+├─ YES → extract it, and name what it draws                  (MyListRow)
+└─ NO  → Can you name it in a word or two, as a thing?
+         ├─ YES → Would the page read better with just the name?
+         │        ├─ YES → extract it
+         │        └─ NO  → leave it where it is
+         └─ NO  → it is not one thing yet; leave it, or split it
 ```
 
----
+When unsure, leave it. Extracting later takes five minutes; a component nobody needed stays forever.
 
-## Bad and good, side by side
+## Four tests catch most bad extractions
 
-### Layout Components
+| Test | Ask | In todo-26 |
+|---|---|---|
+| **Name** | Can you name it as a thing, in a word or two? | `SharedListRow`, not `LeaveButtonAndStuff` |
+| **Halves** | Would either half be useful on its own? Then it is two. | `AddForm`'s input and button: no, so one |
+| **Repeat** | Is it drawn more than once? | `MyListRow`, once per list |
+| **Level** | Is everything in the parent at the same level of abstraction? | `Home` after: headings, rows, a form; no `.get("owner")` |
 
-```tsx
-// Bad - What is this div?
-<div className="mx-auto flex w-full max-w-xl flex-col gap-6 px-4 py-6">
+## An extraction moves JSX, and whatever it used from outside becomes a prop
 
-// Good - Clear semantic name
-<ProfileContainer>
-```
+1. **Cut** the block of JSX out of the parent.
+2. **List** everything it used and did not define itself: variables from a `map`, the parent's props, handlers. Each one becomes a prop.
+3. **Leave the state** where it was, unless only the new component uses it.
+4. **Leave the `key`** on the call site, in the `map`; it belongs to the list, not the row.
+5. **Click through** the app. The behaviour must not change.
 
-### Domain Components
-
-```tsx
-// Bad - Implementation details everywhere
-<section className="flex w-full flex-col items-center gap-2 p-6">
-  <div className="size-24 rounded-3xl bg-neutral-300">
-    <img src={user.avatar} />
+```jsx
+// before, in Home
+{lists.map((item) => (
+  <div key={item.id}>
+    <Link to={`/lists/${item.id}`}>{item.get("name")}</Link>
+    <AddForm onAdd={(username) => onShare(item, username)} buttonLabel="Share with (username)" />
   </div>
-  <h2>{user.name}</h2>
-</section>
+))}
 
-// Good - Semantic hierarchy
-<ProfileHeader>
-  <Avatar user={user} />
-  <UserName>{user.name}</UserName>
-</ProfileHeader>
+// after: item and onShare were used from outside, so they are the props
+{lists.map((list) => (
+  <MyListRow key={list.id} list={list} onShare={onShare} />
+))}
 ```
 
-### Repeated Patterns
+## The same mistakes show up in every review
 
-```tsx
-// Bad - Copy-pasted 10 times
-<button className="rounded-xl bg-neutral-200 px-4 py-2 hover:bg-neutral-300">
-  Click me
-</button>
+| Mistake | Why it hurts | Instead |
+|---|---|---|
+| A component named for an action: `ShareList` | It names the button's job, not the thing on the screen | `MyListRow`, with `handleShare` inside |
+| A name that stopped fitting: `NewTodoForm` used to share lists | The name lies to the next reader | Rename it when its job grows: `AddForm` |
+| `useState` moved into an input wrapper | The parent can no longer read or clear the value | The parent keeps the state; the wrapper takes `value` and `onChange` |
+| `onChange={onChange}` on a wrapped `<input>` | The parent gets an event where it expected text | `onChange={(event) => onChange(event.target.value)}` |
+| A query in a click handler | The component knows how the database works | A function in `services/`, named in the app's words |
+| `alert` in a service | The service decides how the UI reports errors | The service throws; the component catches and tells the user |
+| A heading welded to a container | Neither half can be used without the other | Two components, joined with `children` |
+| A component for every `<div>` | Clutter, for nothing | The [stopping rule](Finding-the-Components.md#start-by-drawing-boxes-on-the-app-you-can-already-see): extract when it repeats |
 
-// Good - Reusable component
-<Button variant="secondary">Click me</Button>
-```
+## For a deeper dive
 
----
-
-## The 4 Tests
-
-| Test | Question | Example |
-|------|----------|---------|
-| **Tech Lead Test** | Can a non-CSS person understand the structure? | `<ProfileHeader>`, not `<div className="...">` |
-| **Semantic Test** | Can you name it in 1-2 words? | `<JobCard>`, not `<Component1>` |
-| **DRY Test** | Is pattern repeated 3+ times? | Extract if yes |
-| **SLA Test** | Is everything at the same abstraction level? | Mixing `<Header>` and `<div className="...">` is not |
-
----
-
-## Step-by-Step Process
-
-### 1. Identify Sections
-```tsx
-// Draw boxes around logical groups
-┌─────────────────────┐
-│ Header Area         │ → ProfileHeader
-├─────────────────────┤
-│ About Section       │ → ProfileSection
-├─────────────────────┤
-│ Experience List     │ → ExperienceList
-│  ├─ Experience Item │ → ExperienceEntry
-│  └─ Experience Item │ → ExperienceEntry
-└─────────────────────┘
-```
-
-### 2. Name Components
-- Use **nouns**: `Button`, `Card`, `Avatar`
-- Be **specific**: `ProfileHeader` not `Header`
-- Show **purpose**: `PrimaryButton` not `BlueButton`
-- Use **domain terms**: `JobListing` not `Item`
-
-### 3. Create Component Files
-```
-components/
-├── ui/             ← Reusable primitives
-│   ├── Button.tsx
-│   └── Avatar.tsx
-├── layout/         ← Layout containers
-│   └── PageContainer.tsx
-└── [domain]/       ← Domain components
-    └── ProfileHeader.tsx
-```
-
-### 4. Extract Props
-```tsx
-// Identify what varies
-<Button
-  variant="primary"    // Style variation
-  size="large"         // Size variation
-  onClick={handleClick} // Behavior
->
-  Click me             // Content
-</Button>
-```
-
-### 5. Refactor Page
-```tsx
-// Before: 275 lines of mixed HTML/CSS
-const Profile = () => {
-  return <div className="...">...</div>
-}
-
-// After: 60 lines of semantic components
-const Profile = () => {
-  return (
-    <ProfileContainer>
-      <ProfileHeader user={user} />
-      <ProfileSections user={user} />
-    </ProfileContainer>
-  );
-};
-```
-
----
-
-## Component Templates
-
-### Layout Component
-```tsx
-interface ContainerProps {
-  children: ReactNode;
-}
-
-export const Container = ({ children }: ContainerProps) => {
-  return (
-    <div className="[your-layout-classes]">
-      {children}
-    </div>
-  );
-};
-```
-
-### UI Component (with variants)
-```tsx
-interface ButtonProps {
-  variant?: 'primary' | 'secondary';
-  size?: 'small' | 'medium' | 'large';
-  children: ReactNode;
-  onClick?: () => void;
-}
-
-export const Button = ({
-  variant = 'primary',
-  size = 'medium',
-  children,
-  onClick
-}: ButtonProps) => {
-  return (
-    <button className={getButtonClasses(variant, size)} onClick={onClick}>
-      {children}
-    </button>
-  );
-};
-```
-
-### List Component
-```tsx
-interface ListProps<T> {
-  items: T[];
-  renderItem: (item: T) => ReactNode;
-  emptyMessage?: string;
-}
-
-export const List = <T extends { id: string }>({
-  items,
-  renderItem,
-  emptyMessage = "No items"
-}: ListProps<T>) => {
-  if (items.length === 0) return <p>{emptyMessage}</p>;
-
-  return (
-    <ul>
-      {items.map(item => (
-        <li key={item.id}>{renderItem(item)}</li>
-      ))}
-    </ul>
-  );
-};
-```
-
-### Polymorphic Component (semantic flexibility)
-```tsx
-interface CardProps {
-  children: ReactNode;
-  as?: 'div' | 'article' | 'section';
-}
-
-export const Card = ({ children, as: Element = 'div' }: CardProps) => {
-  return (
-    <Element className="rounded-lg border p-4">
-      {children}
-    </Element>
-  );
-};
-
-// Usage
-<Card as="article">...</Card>
-```
-
----
-
-## Common Mistakes
-
-| Mistake | Why Bad | Fix |
-|---------|---------|-----|
-| `<div className="container">` everywhere | Meaningless name | `<ProfileContainer>`, `<JobContainer>` |
-| `Component1`, `Component2` | No semantic meaning | Name by purpose |
-| 50-line component inline | Hard to read/test | Extract to file |
-| 15 props | Too coupled | Break into smaller components |
-| `<BlueButton>` | Names appearance | `<PrimaryButton>` (names purpose) |
-| Mixing `<Header>` with `<div className="...">` | Mixed abstraction | Keep consistent level |
-
----
-
-## Before/After Metrics
-
-**Good refactoring achieves:**
-- 50-70% line reduction in page files
-- No component > 150 lines
-- 3-5 reusable components per page
-- Clear component hierarchy (3-4 levels max)
-- Reviewable without CSS knowledge
-
----
-
-## Extraction checklist
-
-- [ ] Identify all pages in your app
-- [ ] For each page, list the semantic sections
-- [ ] Name each section as a component
-- [ ] Extract layout components (containers, wrappers)
-- [ ] Extract UI primitives (buttons, avatars, cards)
-- [ ] Extract domain components (profile header, job card)
-- [ ] Refactor pages to use components
-- [ ] Test: Can someone unfamiliar with your CSS understand structure?
-- [ ] Document components with JSDoc
-
----
-
-## Pro Tips
-
-1. **Start with layout** - Extract containers first
-2. **Then UI primitives** - Buttons, avatars, inputs
-3. **Finally domain** - Profile headers, job cards
-4. **Name your props for what varies** - variant, size, content; not colour
-5. **Write README** - Explain component usage
-6. **Keep it simple** - Don't over-engineer
-
----
-
-## When Stuck
-
-**Ask yourself:**
-1. What does this component DO? (name it that)
-2. Is someone seeing this for first time confused? (extract)
-3. Would I copy-paste this elsewhere? (extract)
-4. Can I test this alone? (if no, extract)
-
-**The Golden Rule:**
-> "Code is read 10x more than it's written. Optimize for reading."
-
----
-
-## Quick Links
-
-- [Full Guide](Component-Extraction-Guide.md)
-- [Semantic JSX Article](https://mxb.dev/blog/semantic-jsx/)
-- [React Docs: Composition](https://react.dev/learn/passing-props-to-a-component)
+- [Component-Extraction Guide](Component-Extraction-Guide.md): a longer worked example, on a different app
+- [Semantic JSX](https://mxb.dev/blog/semantic-jsx/): the argument for naming what a block *is*
+- [Thinking in React](https://react.dev/learn/thinking-in-react)
