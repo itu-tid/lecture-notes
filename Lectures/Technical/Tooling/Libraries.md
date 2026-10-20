@@ -59,7 +59,14 @@ So `npm` writes down every version it actually installed, for every package in `
 
 That is the point of it, and why it goes into Git, even though `npm` generates it. Without it, two people in the same group, who ran `npm install` a week apart, can have different versions of the same library, and a bug that only one of them sees. `todo-26` commits it.
 
-Do not edit it by hand. When two branches both changed dependencies and it conflicts on merge, take either side and run `npm install` again: `npm` will rewrite it.
+Do not edit it by hand. When two branches both added a package and it conflicts on merge:
+
+1. Resolve `package.json` by hand, and keep both packages. It is short, and it is the file that says what you want.
+2. Take either branch's `package-lock.json` whole, for example with `git checkout --theirs package-lock.json`. It is now missing the other branch's package.
+3. Run `npm install`. It sees the package that `package.json` asks for and the lock file lacks, installs it, and writes it into the lock file.
+4. `git add` both files and finish the merge.
+
+You only ever resolve `package.json`; `npm` regenerates the rest from it.
 
 ## Every dependency is a decision someone has to defend
 
@@ -70,6 +77,27 @@ Adding a package takes one command. Getting rid of it, once forty files import i
 - **What does it cost?** How much bigger does the app get, and what do you give up by working its way instead of yours?
 
 `react-router-dom` earned its place in week 6: writing your own router is a project of its own. MUI, next, is a bigger decision: a whole design language, in exchange for a type scale, a palette and spacing that already work together. It is the *No needless dependencies* item on the [review checklist](../Structure/Component-Extraction-Cheatsheet.md).
+
+## Let one file import a library, and leaving it stays cheap
+
+If forty files import a library, forty files change when you replace it. If one file imports it, and the rest of the app imports that file, one file changes.
+
+`todo-26` already does this twice. `TextInput.jsx` wraps the browser's `<input>`: the forms use `TextInput`, so changing what it renders changes every form at once. And the [service layer](../Structure/Pulling-Out-the-Service-Layer.md#when-it-is-done-only-services-imports-parse) wraps Parse: components call `addTodo(list, text)`, and only `services/` knows that Parse exists.
+
+A new package gets the same treatment. `todo-26` reports errors with `alert()`. To show them as toasts with `react-hot-toast`, write one module:
+
+```js
+// notify.js: the only file that knows which toast library we use
+import toast from "react-hot-toast";
+
+export function notifyError(message) {
+  toast.error(message);
+}
+```
+
+and every component calls `notifyError(error.message)`. If the library dies, or you find a better one, you rewrite `notify.js` and nothing else.
+
+You cannot do this with everything. React is in every component file, and there is no wrapping it; that is part of why choosing React is a bigger decision than choosing a toast library.
 
 ## Exam Questions
 
@@ -82,3 +110,7 @@ Adding a package takes one command. Getting rid of it, once forty files import i
 ### 4. What do the three numbers in a version like `19.2.8` mean, and what does the `^` in front of it allow?
 
 ### 5. Why do we need `package-lock.json`, and do we commit it?
+
+### 6. Two branches each added a different package, and `package-lock.json` conflicts on merge. How do you resolve it?
+
+### 7. Why would you let only one file in your app import a given library? Give an example from `todo-26`.
