@@ -2,7 +2,6 @@ Notes for **Technical Interaction Design** at the IT University of Copenhagen.
 
 ## Autumn 2026
 
-- **[Syllabus](syllabus.html)** — week by week: who teaches what, which notes back each lecture, and what is due when.
 - **[Working as a Team](Project-Collaboration.md)** — how a group divides the project
 - **[Report Structure](Report-Structure.md)** — what goes in the final report
 - **[Exam Structure](Exam-Structure.md)** — how the oral runs, and what you get asked
@@ -97,4 +96,4 @@ They are generated from the notes in this repository, so if the two ever disagre
 
 ---
 
-Maintaining the course? [DEVELOPER.md](DEVELOPER.md) — how the syllabus is built, and what lives in the vault instead of here.
+Maintaining the course? [DEVELOPER.md](DEVELOPER.md) — how the week table is generated, and what lives in the vault instead of here.
